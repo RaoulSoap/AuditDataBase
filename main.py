@@ -1,40 +1,66 @@
-from pathlib import Path
-import sys
-import pandas
-import fonctions_generiques
-import traitement_fichiers
+import tkinter
+from tkinter import simpledialog
+import generationFichierBiling
+import generationFichierInfra
+import generationFichierReseau
+import generationFichierSecurity
+import audit_NPS
 
-#print(dir(traitement_fichiersLocalHost))
 
-def create_ams_database():
-    dataBase_AMS = pandas.DataFrame()
+def demandeActionExecuter() :
+    root = tkinter.Tk()
+    root.withdraw()
+    try :
+        choix = simpledialog.askinteger("Choix d'application",
+        "Quelle action voulez-vous menez                ? :\n"
+        "\n"
+        "1 - Update Base Ressources \n"
+        "\n"
+        "2 - Update Base AMS \n"
+        "\n"
+        "3 - Update Infos Radius \n"
+        "\n"
+        "4 - Update Infos BSCS \n"
+        "\n"
+        "5 - Update Base Unifiée \n"
+        "\n"
+        "6 - Croisement Fichier Externe \n")
+        
+        if choix == 1 :
+            print("Exécution de Update Base Ressources...")
+            generationFichierInfra.createRessourcesLocalHost()
+            print("Vos données sont prêtes")
+        elif choix == 2 :
+            print("Exécution de Update Base AMS...")
+            generationFichierReseau.create_ams_database()
+            print("Vos données sont prêtes")
+        elif choix == 3 :
+            print("Exécution de Infos Radius...")
+            generationFichierSecurity.createRessourcesSecurity()
+            print("Vos données sont prêtes")
+        elif choix == 4 :
+            print("Exécution de Infos BSCS...")
+            generationFichierBiling.createRessourcesbiling
+            print("Vos données sont prêtes")
+        elif choix == 5 :
+            print("Exécution de Base Unifiée...")
+            createFichierDataUnified()
+            print("Vos données sont prêtes")
+        elif choix == 6 :
+            print("Exécution de Fichier Externe...")
+            audit_NPS.createConsolidedFile()
+            print("Vos données sont prêtes")
+    except ValueError :
+        print("Erreur : Veuillez entrer un numéro valide.")
+
+def createFichierDataUnified() :
+    AMS = generationFichierReseau.create_ams_database()
+    SI = generationFichierInfra.createRessourcesLocalHost()
+    BSCS = generationFichierBiling.createRessourcesbiling()
+    AAA = generationFichierSecurity.createRessourcesSecurity()
+    EXT = audit_NPS.createConsolidedFile()
     
-    listePath = traitement_fichiers.checkMyOS()
-    pathFile = listePath[0]
-    saveFile = listePath[1]
-    
-    fileCustomer = fonctions_generiques.RechercherFichierByName(pathFile, 'Customer')
-    fileONT = fonctions_generiques.RechercherFichierByName(pathFile, 'Port')
-    fileShaper = fonctions_generiques.RechercherFichierByName(pathFile, 'Shaper')
-    fileBandwith = fonctions_generiques.RechercherFichierByName(pathFile, 'Bandwith')
-    fileOptique = fonctions_generiques.RechercherFichierByName(pathFile, 'Bilan')
-    fileModule = fonctions_generiques.RechercherFichierByName(pathFile, 'SFP')
-    customerId =  traitement_fichiers.traitementProfilsCustmerId(pathFile, saveFile, fileCustomer)
-    portsOnt = traitement_fichiers.traitementProfilsPortsOnt(pathFile, saveFile, fileONT)
-    profilsDebit = traitement_fichiers.traitementProfilsDebit(pathFile, saveFile, fileShaper, fileBandwith)
-    profilsOptiques = traitement_fichiers.traitementProfilsOptiques(pathFile, saveFile, fileOptique)
-    modulesSFP = traitement_fichiers.traitementProfilsModules(pathFile, saveFile, fileModule)
-    
-    dataBase_AMS = customerId.merge(portsOnt, how = 'left').merge(profilsDebit, how = 'left').merge(profilsOptiques, how = 'left')
-    dataPortPon = dataBase_AMS['Port_OLT'].str.split('.', expand = True)
-    traitement_fichiers.tronquerDonneesAlphabetiques(dataBase_AMS,dataPortPon)
-    dataBase_AMS = dataBase_AMS.merge(modulesSFP, on = "PON")
-    dataBase_AMS.pop("PON")
-    traitement_fichiers.traitementFormattagePort(dataBase_AMS,dataPortPon)
-    #print(dataBase_AMS.head(), dataBase_AMS.tail(5), dataBase_AMS.shape, sep = "\n")
-    fonctions_generiques.sauvegardeFichier(dataBase_AMS, saveFile + 'dataBase_AMS.xlsx')
+    UNI = AMS.merge(SI, how = 'left').merge(BSCS, how = 'left').merge(AAA, how = 'left')
 
-
-if __name__ == '__main__' :
-    create_ams_database()
-    #print(PROJECT_DIR,  sep = '\n')
+if __name__ == "__main__":
+   demandeActionExecuter()
