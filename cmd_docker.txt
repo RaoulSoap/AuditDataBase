@@ -1,0 +1,10 @@
+#Pour créer l'image "nom_image=audit_ams:2.0"
+docker build -t audit_base_ams:2.0 C:\Users\FWKT5376\Documents\projetsPython\Audit_base_AMS
+
+
+#Pour créer un volume "nom_volume=volume_ams"
+docker volume create volume_base_ams --driver local --opt type=none --opt device=C:\Users\FWKT5376\Documents\projetsPython\Audit_base_AMS --opt o=bind
+
+
+Pour créer le container "nom_container=audit_ams_v2" et y rattacher le volume_ams dans le path projet du container
+docker run -d --name audit_base_ams --mount source=volume_base_ams,target=/Audit_base_AMS audit_base_ams:2.0
